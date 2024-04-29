@@ -7,21 +7,20 @@
 
 # 会过期
 cookies = {
-    'EGG_SESS': 'xXWBzGzKLNeroZE7tz4XR_7B3K_Ahnd-nMzWJ39uryxys8G6puRRNFSMFdEulg1yO7VtjhwmDP4nCGo-2gNkeIAOlq9cmW30N-ckj3YtnIVr0w48vNF31fNrYg2o27WhMo1c4GemD5VmyFsE3ZY9uhL36peTBGKYkufFhpSvmqGY5oaRzP9QMwZrkouzloka',
-    '_csrf_token': '1714354267804',
     'cna': 'AiqqHvPsXSICAY4EfAzZI5By',
-    'cookie2': '1d8101834f9489f18f4256c0029613e0',
-    'sgcookie': 'E100yNnOeyCir3MZSQCzAZpqGRf3ujsus%2BI6KjH%2BahxBtP2Qdmj4pg0B3XWtoudxBm4ifGH5qslDC5EEn65p2stcG9JZ%2BLU6S3FXVgeWJc3dNzGjK%2FWiNAvdX1WF5iwef0Ft',
     'hng': 'CN%7Czh-CN%7CCNY%7C156',
-    't': '8eef8e6b50d1ff3701e6289c36e2d053',
-    '_tb_token_': '58beee4e34877',
     'lid': '%E6%A2%A6%E4%BB%B2%E7%82%B9%E7%94%B5%E5%BA%97',
+    '_csrf_token': '1714396921908',
+    '_m_h5_tk': '7cc32619fb701efb857eeb96082e0299_1714407364039',
+    '_m_h5_tk_enc': 'a025b15876900ca7bc680f1b0863b8f0',
+    'sgcookie': 'E100yNnOeyCir3MZSQCzAZpqGRf3ujsus%2BI6KjH%2BahxBtP2Qdmj4pg0B3XWtoudxBm4ifGH5qslDC5EEn65p2stcG9JZ%2BLU6S3FXVgeWJc3dNzGjK%2FWiNAvdX1WF5iwef0Ft',
     'uc4': 'id4=0%40UgQycz3QT6tDE5AoEbMnqmK3RVVS&nk4=0%40oib%2BOBj0WsRXrGUpZjihcqcQsoIm',
     '__cn_logon__': 'false',
-    '_m_h5_tk': 'd0547c656a7598a33cf2c0a62ccdcd31_1714384818074',
-    '_m_h5_tk_enc': 'c3e42c89d7ec08d5ac7de291d1305aff',
-    'tfstk': 'fvAt3h9yDDmGhTMD1FMH0yFZf_0n-CLaOh87iijghHKplhsGmt6bde_lWiZ0GZGQkZsh5-NbGpIvAHI1mARgMHKBqKvGnncAcUSHmSYMMpPvzERi7s0N_F5VG0moZsLw7s7j3rmixegfudJyJbhk7FzQWogkdb2vvBCW1itfCMNCuMw1lstfOX_fA5_b1ssIJZSCcs615WwCyar_h56s66uOYP_TMBx8kqFsmsPbGC1VBgL7nSNX9NBTQFspELAdWOI5Ks720CtHlCANLxycgevJDKtI95Kv5LtfjBi7MivPkE_RNzVHJU_AFs6LlSTd1MWB6_G7vwJBSKOwXrFf7CAlHgWKlSWcOQXWFhUqze11lnWyi0PNfETyaLf-MW1Ohg-wZQHwQujRoRgKJ-yVCwjwdwS-Msy05wIo5Ow43tbFJg0KJ-yVCw7dqV6_3-Wc8',
-    'isg': 'BK6u-0ICRLb657BRxbL8vi2m_wRwr3Kpkgmkl9h3XrFsu08VQDfauFT1c6dXeGrB',
+    'cookie2': '1c38b039882367135d5e20676b16331f',
+    't': '1511cf82efe141dfc25a6b26d533689a',
+    '_tb_token_': 'f677536b4a33b',
+    'isg': 'BBoao4SeKDrfJaSVmVZAghmKa8A8S54lBrWQ0ySTWa14l7rRDNrENXCkZ-MLXBa9',
+    'tfstk': 'fP8En04FS23Ek-KlQO_PQQc1-p_d5ZHbxU65ZQAlO9XhdU9yZ_57qTf3xCVl9sNHF9AlSlfdtgYCRB9wZL9vA9bIwuzyadAQRTOua_v1-gKCF96PzQpq1xgjlBddygDjhqTa83_RyT05rJExyYQohxg_f5jKdax5KVrPbCXOayqhZL4iSsBGZybkEOjGi_4hravksf5CakXu-6bgI_GGNpp8hsjnp363B7mrYMXDt9VQOFYahtAHwz4oN6SU_BXarzYwXsEAK9mY1TQCpICeeqUd-g-HL1brzPbepBYlbUMslMRcZgTlbVk2_UWFmejaardV-_vl4hH4l67Bbi8evbeMtK6emwd7gvON0hSAsGVzxwtXGUID-2yACiCy3sJULgkue1DPMUKUEuSh61Wj_fVebD6V2mOxZuERjifNhXIu2uIh61Wj_fr82Gjc_tGdq',
 }
 
 
@@ -49,4 +48,4 @@ app_key = '12574478'
 
 # 日志配置
 log_save_path = "./logs/"
-log_level = "INFO"
+log_level = "DEBUG"

@@ -6,10 +6,10 @@
 # @Desc :
 import time
 
-from fastapi import FastAPI, Request
 import uvicorn
+from fastapi import FastAPI, Request
 
-from shop_crawler import get_shop_product
+import shop_crawler
 from util import logger
 
 app = FastAPI()
@@ -45,8 +45,10 @@ def read_root():
 
 
 @app.get("/shop")
-async def read_item(shop_url: str, page: int = 1):
-    return await get_shop_product(shop_url, page)
+async def shop(shop_url: str = 'https://shop2260590x869h3.1688.com/page/offerlist.htm', page: int = 1):
+    shop_id = await shop_crawler.get_shop_id(shop_url)
+    logger.info(f'获取到店铺ID: {shop_id}')
+    return await shop_crawler.get_shop_product(shop_id, page)
 
 
 if __name__ == '__main__':

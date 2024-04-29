@@ -10,7 +10,7 @@ import re
 
 import signer
 from config import *
-from util import asyhttp, logger
+from util import logger, AsyHttp
 from util import to_item, save_in_excel
 
 
@@ -23,18 +23,19 @@ async def get_shop_id(shop_url: str):
     params = {
         'spm': 'a2615.2177701.wp_pc_common_topnav.0',
     }
-
-    response = await asyhttp.get(shop_url, params=params, cookies=cookies, headers=headers)
-    # 正则表达式，用于匹配memberId后面的值
-    pattern = r'"memberId":"([^"]+)"'
-    # 使用正则表达式搜索
-    match = re.search(pattern, await response.text())
-    # 如果找到匹配项，则提取并打印结果
-    if match:
-        member_id = match.group(1)
-        return member_id
-    else:
-        logger.error("没有找到店铺ID! 请检查你输入的地址")
+    async with AsyHttp() as http:
+        async with http.get(shop_url, params=params, cookies=cookies, headers=headers) as response:
+            # logger.info("response: {}", await response.text())
+            # 正则表达式，用于匹配memberId后面的值
+            pattern = r'"memberId":"([^"]+)"'
+            # 使用正则表达式搜索
+            match = re.search(pattern, await response.text())
+            # 如果找到匹配项，则提取并打印结果
+            if match:
+                member_id = match.group(1)
+                return member_id
+            else:
+                logger.error("没有找到店铺ID! 请检查你输入的地址")
 
 
 async def get_shop_product(shop_id: str, page_num: int = 1):
@@ -79,16 +80,16 @@ async def get_shop_product(shop_id: str, page_num: int = 1):
 
     params['t'], params['sign'] = signer.sign(data['data'], token)
     # print(params['t'], params['sign'])
-
-    response = await asyhttp.post(
-        'https://h5api.m.1688.com/h5/mtop.1688.shop.data.get/1.0/',
-        params=params,
-        cookies=cookies,
-        headers=headers,
-        data=data,
-    )
-    # print(response.text)
-    return await response.json()
+    async with AsyHttp() as http:
+        async with http.post(
+                'https://h5api.m.1688.com/h5/mtop.1688.shop.data.get/1.0/',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+                data=data,
+        ) as response:
+            # print(response.text)
+            return await response.json()
 
 
 async def get_shop_all_product(shop_id):
@@ -124,14 +125,15 @@ async def get_shop_all_product(shop_id):
 async def main():
     # https://shop2260590x869h3.1688.com/page/offerlist.htm
     # https://shop49w5890640814.1688.com/page/offerlist.htm
-    url = input("请输入店铺地址: ")
-    sid = await get_shop_id(url)
+    # url = input("请输入店铺地址: ")
+    # sid = await get_shop_id(url)
     # sid = "b2b-2212676093205a9a2e"
-    # sid = "b2b-2217035390425d35e9"
+    sid = "b2b-2217035390425d35e9"
     if sid:
         logger.info("shop_id: {}", sid)
         total_product = await get_shop_all_product(sid)
-        save_in_excel(total_product, sid)
+        logger.info("total_product: {}", len(total_product))
+        # save_in_excel(total_product, sid)
 
 
 if __name__ == '__main__':

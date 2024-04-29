@@ -7,7 +7,7 @@
 import asyncio
 
 import pandas as pd
-import openpyxl
+import openpyxl  # pip install openpyxl
 import sys
 
 from aiohttp import ClientSession, ClientTimeout
@@ -69,41 +69,59 @@ def save_in_excel(data, filename):
 
 class AsyHttp:
     def __init__(self):
+        self.client = ClientSession(timeout=ClientTimeout(total=10, connect=3))
+        # 重试3次
+        self.retry_client = RetryClient(self.client, retry_options=ExponentialRetry(attempts=3))
 
-        self.retry_client = None
-
-    async def request(self, method, url, **kwargs):
+    def request(self, method, url, **kwargs):
         logger.debug(f"正在发起请求 => {method}:{url}")
         try:
+            # await self.semaphore.acquire()
+            # async with self.semaphore:
             # 代理: https://docs.aiohttp.org/en/stable/client_advanced.html#proxy-support
             proxy = 'http://your_proxy_url:your_proxy_port'
             proxy_auth = aiohttp.BasicAuth('your_user', 'your_password')
-            # 超时
-            async with ClientSession(timeout=ClientTimeout(total=10, connect=3)) as client:
-                # 重试3次
-                self.retry_client = RetryClient(client, retry_options=ExponentialRetry(attempts=3))
-                async with self.retry_client.request(method, url, **kwargs) as response:
-                    logger.debug(f"返回状态码 => {response.status}")
-                    return response
+            return self.retry_client.request(method, url, **kwargs)
         except aiohttp.ClientError as e:
             logger.error(f"请求失败 => {e}")
         finally:
-            pass
+            # await self.semaphore.acquire()
             # await self.retry_client.close()
+            pass
 
-    async def get(self, url, **kwargs):
-        return await self.request('GET', url, **kwargs)
+    def get(self, url, **kwargs):
+        return self.request('GET', url, **kwargs)
 
-    async def post(self, url, **kwargs):
-        return await self.request('POST', url, **kwargs)
+    def post(self, url, **kwargs):
+        return self.request('POST', url, **kwargs)
+
+    async def close(self):
+        await self.retry_client.close()
+        await self.client.close()
+
+    async def __aenter__(self):
+        # 这里执行资源的初始化操作
+        self.__init__()
+        logger.debug(f"正在初始化资源 => {self.client}")
+        return self  # 返回self或其他资源供with语句中的as使用
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        logger.debug(f"正在关闭资源 => {self.client}")
+        # 这里执行资源的清理操作
+        await self.close()
+        # 如果没有异常，返回False；如果处理了异常，返回True
+        return False
 
 
-asyhttp = AsyHttp()
+# asyhttp = AsyHttp()
 
 if __name__ == '__main__':
     async def main():
-        resp = await asyhttp.get('https://www.baidu.com')
-        print(resp.text)
+        async with asyncio.TaskGroup() as tg:
+            for i in range(3):
+                task = tg.create_task(AsyHttp().get('https://www.baidu.com'))
+                print(task.done())
+                # task.add_done_callback(lambda t: print(t.result()))
 
 
     asyncio.run(main())
