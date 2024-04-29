@@ -4,40 +4,40 @@
 # @File : shop
 # @Project : 1688-scraper
 # @Desc :
+import asyncio
 import json
 import re
 
-import requests
-
 import signer
 from config import *
+from util import asyhttp, logger
 from util import to_item, save_in_excel
 
 
-def get_shop_id(shop_addr: str):
+async def get_shop_id(shop_url: str):
     """
 
-    :param shop_addr: like 'https://shop49w5890640814.1688.com/page/offerlist.htm'
+    :param shop_url: like this 'https://shop49w5890640814.1688.com/page/offerlist.htm'
     :return:
     """
     params = {
         'spm': 'a2615.2177701.wp_pc_common_topnav.0',
     }
 
-    response = requests.get(shop_addr, params=params, cookies=cookies, headers=headers)
+    response = await asyhttp.get(shop_url, params=params, cookies=cookies, headers=headers)
     # 正则表达式，用于匹配memberId后面的值
     pattern = r'"memberId":"([^"]+)"'
     # 使用正则表达式搜索
-    match = re.search(pattern, response.text)
+    match = re.search(pattern, await response.text())
     # 如果找到匹配项，则提取并打印结果
     if match:
         member_id = match.group(1)
         return member_id
     else:
-        print("没有找到店铺ID!")
+        logger.error("没有找到店铺ID!")
 
 
-def get_shop_product(shop_id: str, page_num: int = 1):
+async def get_shop_product(shop_id: str, page_num: int = 1):
     params = {
         'jsv': '2.7.0',
         'appKey': app_key,
@@ -80,7 +80,7 @@ def get_shop_product(shop_id: str, page_num: int = 1):
     params['t'], params['sign'] = signer.sign(data['data'], token)
     # print(params['t'], params['sign'])
 
-    response = requests.post(
+    response = await asyhttp.post(
         'https://h5api.m.1688.com/h5/mtop.1688.shop.data.get/1.0/',
         params=params,
         cookies=cookies,
@@ -88,46 +88,50 @@ def get_shop_product(shop_id: str, page_num: int = 1):
         data=data,
     )
     # print(response.text)
-    return response.json()
+    return await response.json()
 
 
-def get_shop_all_product(shop_id):
+async def get_shop_all_product(shop_id):
     page_num = 1
     total_page = 1
     total = []
     while page_num <= total_page:
-        print("page:", page_num)
+        logger.info("page: {}", page_num)
         json_data = None
         try:
-            json_data = get_shop_product(shop_id, page_num)
+            json_data = await get_shop_product(shop_id, page_num)
             content = json_data['data']['content']
 
             if page_num == 1:
                 offer_count = content['offerCount']
-                print("总商品数量:", offer_count)
+                logger.info("总商品数量: {}", offer_count)
                 total_page = int(int(offer_count) / count) + 1
-                print("总页数:", total_page)
+                logger.info("总页数: {}", total_page)
 
             offer_list = list(map(to_item, content['offerList']))
             total.extend(offer_list)
         except KeyError as e:
-            print(json_data, e, "请更新cookie")
+            logger.error("请尝试更新cookie! json_data: {}, E: {}", json_data, e)
         except Exception as e:
-            print(type(e), e)
-            print(page_num, "error", e.args)
+            logger.error("异常类型{}, {}", type(e), e)
+            logger.error("页码: {}, E: {}", page_num, e.args)
         finally:
             page_num += 1
 
     return total
 
 
-if __name__ == '__main__':
+async def main():
     # https://shop2260590x869h3.1688.com/page/offerlist.htm
     # https://shop49w5890640814.1688.com/page/offerlist.htm
     url = input("请输入店铺地址: ")
-    sid = get_shop_id(url)
+    sid = await get_shop_id(url)
     # sid = "b2b-2212676093205a9a2e"
     if sid:
-        print("shop_id:", sid)
-        total_product = get_shop_all_product(sid)
+        logger.info("shop_id: {}", sid)
+        total_product = await get_shop_all_product(sid)
         save_in_excel(total_product, sid)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
