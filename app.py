@@ -10,6 +10,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 
 import shop_crawler
+from config import set_cookies
 from util import logger
 
 app = FastAPI()
@@ -20,7 +21,7 @@ async def unicorn_exception_handler(request: Request, exc: Exception):
     logger.error(f'URL: {request.url}, 发生异常: {exc}')
     return {
         "status_code": 500,
-        "message": "异常, 请联系管理员",
+        "message": "异常, 请联系管理员Moment_Shiny",
         "data": str(exc)
     }
 
@@ -49,6 +50,19 @@ async def shop(shop_url: str = 'https://shop2260590x869h3.1688.com/page/offerlis
     shop_id = await shop_crawler.get_shop_id(shop_url)
     logger.info(f'获取到店铺ID: {shop_id}')
     return await shop_crawler.get_shop_product(shop_id, page)
+
+
+@app.post("/update/cookies")
+async def update_cookies(cookies: dict):
+    try:
+        set_cookies(cookies)
+        return {
+            "message": "更新成功"
+        }
+    except Exception as e:
+        return {
+            "message": "更新失败 => " + str(e),
+        }
 
 
 if __name__ == '__main__':

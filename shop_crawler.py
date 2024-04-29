@@ -23,6 +23,7 @@ async def get_shop_id(shop_url: str):
     params = {
         'spm': 'a2615.2177701.wp_pc_common_topnav.0',
     }
+    cookies = get_cookies()
     async with AsyHttp() as http:
         async with http.get(shop_url, params=params, cookies=cookies, headers=headers) as response:
             # logger.info("response: {}", await response.text())
@@ -76,6 +77,7 @@ async def get_shop_product(shop_id: str, page_num: int = 1):
     data = {
         'data': json.dumps(body, separators=(',', ':')),
     }
+    cookies = get_cookies()
     token = cookies['_m_h5_tk'].split('_')[0]
 
     params['t'], params['sign'] = signer.sign(data['data'], token)
