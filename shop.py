@@ -7,11 +7,11 @@
 import json
 import re
 
-import pandas as pd
 import requests
 
 import signer
-from config import cookies, headers
+from config import *
+from util import to_item, save_in_excel
 
 
 def get_shop_id(shop_addr: str):
@@ -34,15 +34,15 @@ def get_shop_id(shop_addr: str):
         member_id = match.group(1)
         return member_id
     else:
-        print("没有找到匹配项")
+        print("没有找到店铺ID!")
 
 
 def get_shop_product(shop_id: str, page_num: int = 1):
     params = {
         'jsv': '2.7.0',
-        'appKey': '12574478',
-        't': '1714312920003',
-        'sign': '7dd95103f3041c5ec5c122a360d7f813',
+        'appKey': app_key,
+        # 't': '1714312920003',
+        # 'sign': '7dd95103f3041c5ec5c122a360d7f813',
         'api': 'mtop.1688.shop.data.get',
         'v': '1.0',
         'type': 'json',
@@ -63,7 +63,7 @@ def get_shop_product(shop_id: str, page_num: int = 1):
             "tradenumFilter": False,
             "quantityBegin": None,
             "pageNum": page_num,
-            "count": 30
+            "count": count
         }
     }
     body = {
@@ -91,19 +91,13 @@ def get_shop_product(shop_id: str, page_num: int = 1):
     return response.json()
 
 
-def to_item(x):
-    return {
-        'subject': x['subject'],
-        'underLinePrice': x['underLinePrice']
-    }
-
-
 def get_shop_all_product(shop_id):
     page_num = 1
     total_page = 1
     total = []
     while page_num <= total_page:
         print("page:", page_num)
+        json_data = None
         try:
             json_data = get_shop_product(shop_id, page_num)
             content = json_data['data']['content']
@@ -111,12 +105,15 @@ def get_shop_all_product(shop_id):
             if page_num == 1:
                 offer_count = content['offerCount']
                 print("总商品数量:", offer_count)
-                total_page = int(int(offer_count) / 30) + 1
+                total_page = int(int(offer_count) / count) + 1
                 print("总页数:", total_page)
 
             offer_list = list(map(to_item, content['offerList']))
             total.extend(offer_list)
+        except KeyError as e:
+            print(json_data, e, "请更新cookie")
         except Exception as e:
+            print(type(e), e)
             print(page_num, "error", e.args)
         finally:
             page_num += 1
@@ -125,13 +122,12 @@ def get_shop_all_product(shop_id):
 
 
 if __name__ == '__main__':
-    # url = input("请输入店铺地址: 比如(https://shop49w5890640814.1688.com/page/offerlist.htm)")
-    # sid = get_shop_id(url)
-    sid = "b2b-2212676093205a9a2e"
+    # https://shop2260590x869h3.1688.com/page/offerlist.htm
+    # https://shop49w5890640814.1688.com/page/offerlist.htm
+    url = input("请输入店铺地址: ")
+    sid = get_shop_id(url)
+    # sid = "b2b-2212676093205a9a2e"
     if sid:
         print("shop_id:", sid)
         total_product = get_shop_all_product(sid)
-        # 写入 excel
-        # 将字典转换为DataFrame
-        df = pd.DataFrame(total_product)
-        df.to_excel(f'output/{sid}.xlsx', index=False, engine='openpyxl')
+        save_in_excel(total_product, sid)

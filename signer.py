@@ -5,15 +5,15 @@
 # @Project : 1688-scraper
 # @Desc :
 import os
-import re
 import time
 
 import execjs
 
+from config import app_key
+
 
 def sign(data, m_h5_tk):
     # print("signing...", data, m_h5_tk)
-    app_key = '12574478'  # 固定参数
     timestamp = str(int(time.time() * 1000))  # 时间戳
 
     p = (m_h5_tk + "&" + timestamp + "&" + app_key + "&" + data)
