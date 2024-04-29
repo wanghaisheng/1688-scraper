@@ -34,7 +34,7 @@ async def get_shop_id(shop_url: str):
         member_id = match.group(1)
         return member_id
     else:
-        logger.error("没有找到店铺ID!")
+        logger.error("没有找到店铺ID! 请检查你输入的地址")
 
 
 async def get_shop_product(shop_id: str, page_num: int = 1):
@@ -127,6 +127,7 @@ async def main():
     url = input("请输入店铺地址: ")
     sid = await get_shop_id(url)
     # sid = "b2b-2212676093205a9a2e"
+    # sid = "b2b-2217035390425d35e9"
     if sid:
         logger.info("shop_id: {}", sid)
         total_product = await get_shop_all_product(sid)
