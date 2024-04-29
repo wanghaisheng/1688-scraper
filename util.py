@@ -13,7 +13,7 @@ import sys
 from aiohttp import ClientSession, ClientTimeout
 from loguru import logger as loguru_logger
 from aiohttp_retry import RetryClient, ExponentialRetry
-from config import log_save_path
+from config import log_save_path, log_level
 import aiohttp
 
 
@@ -31,6 +31,7 @@ class MyLogger:
                                ":<cyan>{line}</cyan> | "  # 行号
                                "<level>{level}</level>: "  # 等级
                                "<level>{message}</level>",  # 日志内容
+                        level=log_level
                         )
         # 输出到文件的格式,注释下面的add',则关闭日志写入
         self.logger.add(log_file_path + 'scraper.log', level='DEBUG',

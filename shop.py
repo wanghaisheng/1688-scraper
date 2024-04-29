@@ -96,7 +96,7 @@ async def get_shop_all_product(shop_id):
     total_page = 1
     total = []
     while page_num <= total_page:
-        logger.info("page: {}", page_num)
+        logger.info("current page: {}", page_num)
         json_data = None
         try:
             json_data = await get_shop_product(shop_id, page_num)

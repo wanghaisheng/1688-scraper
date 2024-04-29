@@ -46,4 +46,7 @@ headers = {
 
 count = 30
 app_key = '12574478'
+
+# 日志配置
 log_save_path = "./logs/"
+log_level = "INFO"
