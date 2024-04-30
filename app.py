@@ -11,21 +11,20 @@ from fastapi import FastAPI, Request, applications
 from fastapi.openapi.docs import get_swagger_ui_html
 
 import shop_crawler
-from config import set_cookies
 from util import logger
 
 app = FastAPI()
 
 
-def swagger_monkey_patch(*args, **kwargs):
-    return get_swagger_ui_html(
-        *args, **kwargs,
-        swagger_js_url='https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.10.3/swagger-ui-bundle.js',
-        swagger_css_url='https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.10.3/swagger-ui.css'
-    )
-
-
-applications.get_swagger_ui_html = swagger_monkey_patch
+# def swagger_monkey_patch(*args, **kwargs):
+#     return get_swagger_ui_html(
+#         *args, **kwargs,
+#         swagger_js_url='https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.10.3/swagger-ui-bundle.js',
+#         swagger_css_url='https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.10.3/swagger-ui.css'
+#     )
+#
+#
+# applications.get_swagger_ui_html = swagger_monkey_patch
 
 
 @app.exception_handler(Exception)
@@ -62,19 +61,6 @@ async def shop(shop_url: str = 'https://shop2260590x869h3.1688.com/page/offerlis
     shop_id = await shop_crawler.get_shop_id(shop_url)
     logger.info(f'获取到店铺ID: {shop_id}')
     return await shop_crawler.get_shop_product(shop_id, page)
-
-
-@app.post("/update/cookies")
-async def update_cookies(cookies: dict):
-    try:
-        set_cookies(cookies)
-        return {
-            "message": "更新成功"
-        }
-    except Exception as e:
-        return {
-            "message": "更新失败 => " + str(e),
-        }
 
 
 if __name__ == '__main__':

@@ -4,20 +4,16 @@
 # @File : util
 # @Project : 1688-scraper
 # @Desc : 公共方法
-import asyncio
-import warnings
-
-import pandas as pd
-import openpyxl  # pip install openpyxl
 import sys
 
-from aiohttp import ClientSession, ClientTimeout
-from loguru import logger as loguru_logger
-from aiohttp_retry import RetryClient, ExponentialRetry
-from config import log_save_path, log_level
 import aiohttp
+import pandas as pd
+from aiohttp import ClientSession, ClientTimeout, ClientHttpProxyError, ServerDisconnectedError
+from aiohttp_retry import RetryClient, ExponentialRetry
+from loguru import logger as loguru_logger
 
-# warnings.simplefilter('ignore', category=ResourceWarning)  # 尝试消除Unclosed client session的警告
+import signer
+from config import log_save_path, log_level, cookies
 
 
 class MyLogger:
@@ -70,56 +66,70 @@ def save_in_excel(data, filename):
         return False
 
 
-class AsyHttp:
-    def __init__(self):
-        # 默认情况下，aiohttp使用HTTP keep-alive，因此同一个TCP连接可以用于多个请求。 这可以提高性能，因为不必为每个请求都建立一个新的TCP连接。
-        connector = aiohttp.TCPConnector(force_close=True, verify_ssl=False)
-        self.client = ClientSession(connector=connector, timeout=ClientTimeout(total=10, connect=3), trust_env=True)
-        # 重试3次
-        self.retry_client = RetryClient(self.client, retry_options=ExponentialRetry(attempts=3))
-
-    def request(self, method, url, **kwargs):
-        logger.debug(f"正在发起请求 => {method}:{url}")
-        try:
-            # 代理: https://docs.aiohttp.org/en/stable/client_advanced.html#proxy-support
-            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # 加上这一行
-            # proxy = 'http://your_proxy_url:your_proxy_port'
-            # proxy_auth = aiohttp.BasicAuth('your_user', 'your_password')
-            return self.retry_client.request(method, url, **kwargs)
-        except aiohttp.ClientError as e:
-            logger.error(f"请求失败 => {e}")
-
-    def get(self, url, **kwargs):
-        return self.request('GET', url, **kwargs)
-
-    def post(self, url, **kwargs):
-        return self.request('POST', url, **kwargs)
-
-    async def close(self):
-        await self.retry_client.close()
-        await self.client.close()
-
-    async def __aenter__(self):
-        # 这里执行资源的初始化操作
-        self.__init__()
-        # logger.debug(f"正在初始化资源 => {self.client}")
-        return self  # 返回self或其他资源供with语句中的as使用
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        # logger.debug(f"正在关闭资源 => {self.client}")
-        # 这里执行资源的清理操作
-        await self.close()
-        # 如果没有异常，返回False；如果处理了异常，返回True
-        return False
+global_proxy = None
 
 
-# asyhttp = AsyHttp()
+async def update_proxy():
+    global global_proxy
+    url = 'https://service.ipzan.com/core-extract'
+    params = {
+        'num': '1',
+        'no': '20240430549415161446',
+        'minute': '1',
+        'format': 'json',
+        'protocol': '1',
+        'pool': 'quality',
+        'mode': 'whitelist',
+        'secret': '4dmg4911mi7sgf'
+    }
+    try:
+        async with ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                json_data = await response.json()
+                if json_data['status'] == 200 and json_data['code'] == 0:
+                    proxy = json_data['data']['list'][0]
+                    global_proxy = f'http://{proxy["ip"]}:{proxy["port"]}'
+                else:
+                    logger.error("返回错误: {}", json_data)
+    except Exception as e:
+        logger.error('获取代理IP失败: {}', str(e))
+
+
+async def proxy_request(method, url, callback, **kwargs):
+    logger.debug(f"正在发起请求 => {method}:{url}")
+    retry_proxy = 3
+    # 签名
+    if params := kwargs.get('params'):
+        token = cookies['_m_h5_tk'].split('_')[0]
+        params['t'], params['sign'] = signer.sign(kwargs.get('data').get('data'), token)
+    if global_proxy is None:
+        await update_proxy()
+    connector = aiohttp.TCPConnector(force_close=True, verify_ssl=False)
+    async with ClientSession(connector=connector, timeout=ClientTimeout(total=30, connect=10), trust_env=True) as client:
+        async with RetryClient(client, retry_options=ExponentialRetry(attempts=3)) as retry_client:
+            try:
+                logger.debug(f"代理IP => {global_proxy}")
+                async with retry_client.request(method, url, proxy=global_proxy, cookies=cookies, **kwargs) as response:
+                    return await callback(response)
+            except (ClientHttpProxyError, ServerDisconnectedError) as e:
+                retry_proxy -= 1
+                if retry_proxy > 0:
+                    logger.error("代理失效: {}, ", e)
+                    await update_proxy()
+                    logger.error("正在更换代理 => {}, 正在重试第 {} 次请求", global_proxy, 3 - retry_proxy, )
+                    return await proxy_request(method, url, callback, **kwargs)
+                logger.error("{} 代理错误: {}", retry_proxy, e)
+            except Exception as e:
+                logger.error("请求异常: {}", e)
+
+
+async def proxy_get(url, callback, **kwargs):
+    return await proxy_request('GET', url, callback, **kwargs)
+
+
+async def proxy_post(url, callback, **kwargs):
+    return await proxy_request('POST', url, callback, **kwargs)
+
 
 if __name__ == '__main__':
-    async def main():
-        async with AsyHttp() as http:
-            async with http.get("http://baidu.com") as response:
-                print(await response.text())
-
-
-    asyncio.run(main())
+    pass
