@@ -5,6 +5,7 @@
 # @Project : 1688-scraper
 # @Desc : 公共方法
 import asyncio
+import warnings
 
 import pandas as pd
 import openpyxl  # pip install openpyxl
@@ -16,6 +17,8 @@ from aiohttp_retry import RetryClient, ExponentialRetry
 from config import log_save_path, log_level
 import aiohttp
 
+warnings.simplefilter('ignore', category=ResourceWarning)
+# warnings.filterwarnings('ignore')
 
 class MyLogger:
     def __init__(self, log_file_path=log_save_path):
@@ -69,7 +72,9 @@ def save_in_excel(data, filename):
 
 class AsyHttp:
     def __init__(self):
-        self.client = ClientSession(timeout=ClientTimeout(total=10, connect=3))
+        # 默认情况下，aiohttp使用HTTP keep-alive，因此同一个TCP连接可以用于多个请求。 这可以提高性能，因为不必为每个请求都建立一个新的TCP连接。
+        connector = aiohttp.TCPConnector(force_close=True)
+        self.client = ClientSession(connector=connector, timeout=ClientTimeout(total=10, connect=3))
         # 重试3次
         self.retry_client = RetryClient(self.client, retry_options=ExponentialRetry(attempts=3))
 
@@ -102,11 +107,11 @@ class AsyHttp:
     async def __aenter__(self):
         # 这里执行资源的初始化操作
         self.__init__()
-        logger.debug(f"正在初始化资源 => {self.client}")
+        # logger.debug(f"正在初始化资源 => {self.client}")
         return self  # 返回self或其他资源供with语句中的as使用
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        logger.debug(f"正在关闭资源 => {self.client}")
+        # logger.debug(f"正在关闭资源 => {self.client}")
         # 这里执行资源的清理操作
         await self.close()
         # 如果没有异常，返回False；如果处理了异常，返回True
@@ -117,11 +122,9 @@ class AsyHttp:
 
 if __name__ == '__main__':
     async def main():
-        async with asyncio.TaskGroup() as tg:
-            for i in range(3):
-                task = tg.create_task(AsyHttp().get('https://www.baidu.com'))
-                print(task.done())
-                # task.add_done_callback(lambda t: print(t.result()))
+        async with AsyHttp() as http:
+            async with http.get("http://baidu.com") as response:
+                print(await response.text())
 
 
     asyncio.run(main())
