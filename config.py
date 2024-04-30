@@ -10,21 +10,43 @@ import json
 import redis
 
 # 建立 Redis 连接
-redis_cache = redis.StrictRedis(host='123.60.19.63', port=6379, db=0)
+redis_client = redis.StrictRedis(host='47.116.210.255', port=6379, db=0, password='bwxRoot123456')
 
 
 def set_cookies(cookies: dict):
-    redis_cache.set('cookies', json.dumps(cookies))
+    redis_client.set('cookies', json.dumps(cookies))
 
 
 def get_cookies():
-    cookies: bytes = redis_cache.get('cookies')
+    cookies: bytes = redis_client.get('cookies')
     if cookies:
         return json.loads(cookies)
     # else:
     #     logger.info('请先更新cookie! Redis 中没有 cookies 缓存')
 
 
+def init_cookie():
+    cok = {
+        "_med": "dw:2560&dh:1440&pw:2560&ph:1440&ist:0",
+        "cna": "AiqqHvPsXSICAY4EfAzZI5By",
+        "_bl_uid": "valbpvU1k0baIn9v1v42c5Fr6bqj",
+        "hng": "CN|zh-CN|CNY|156",
+        "lid": "梦仲点电店",
+        "_csrf_token": "1714441545479",
+        "_m_h5_tk": "49d616f7d84423ab67f084fc2fd55a3b_1714449466512",
+        "_m_h5_tk_enc": "69ac3ab5c548e060b8ba5f9c79499792",
+        "__cn_logon__": "false",
+        "t": "31c0f03542272c9a60460e43f2f80958",
+        "_tb_token_": "7bbe3e5be37b5",
+        "tfstk": "f2no3KT6F4z5qMXpZmqW0SzaKqYvV_ZQIXIL9kFeuSPf2XE8vrz4IJ7PUkSd3Zy-agzUzJWV3ScQwzEzvkfn6SN-Jp978pc-dMUEvWnhFmcGvgdWPvS3vkR96hKtFYEQYCBwnZ6aNJM4T39ZoAD7AkRAHM89jYGgLz_WZkJ00JyGzkyz8oJ0p8WzY7zFgxyUgWrUYXrq3JyaTTzFYt7q6E_z6DuZ0deM2bdZaXo0ErzxUS7aNm2ur5kPJMSF584u_YPD63JxZrkQ-D6CxrHr5XwZa_RuYx2isRckJ9NouAn-8YxD_YZ3Zb0UoL-rnuVuSmUGKaro8bi3P4XBCxrrGVN_zEObn0nT-5acgQkxn7zi-bdfY73i3j4tDsIT0Au0mgkcuNPEfMw2pm7CRzybn5O5-VX0Bn61tKvcWvazhRN9nKbCRzybn5pDnNHQz-w_6",
+        "isg": "BD4-ShGU1NmJ5gDh1eJs7h12j1SAfwL5gjk0x-hHsAF8i95lUAqpCFRpB9dHqPoR"
+    }
+    cookies = get_cookies()
+    if cookies is None or '_m_h5_tk' not in cookies:
+        set_cookies(cok)
+
+
+init_cookie()
 # 会过期
 # cookies = get_cookies()
 
