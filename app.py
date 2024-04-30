@@ -7,13 +7,25 @@
 import time
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, applications
+from fastapi.openapi.docs import get_swagger_ui_html
 
 import shop_crawler
 from config import set_cookies
 from util import logger
 
 app = FastAPI()
+
+
+def swagger_monkey_patch(*args, **kwargs):
+    return get_swagger_ui_html(
+        *args, **kwargs,
+        swagger_js_url='https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.10.3/swagger-ui-bundle.js',
+        swagger_css_url='https://cdn.bootcdn.net/ajax/libs/swagger-ui/4.10.3/swagger-ui.css'
+    )
+
+
+applications.get_swagger_ui_html = swagger_monkey_patch
 
 
 @app.exception_handler(Exception)
@@ -38,7 +50,7 @@ async def add_process_time_header(request: Request, call_next):  # call_next将�
 
 
 @app.get("/")
-def read_root():
+def hello():
     return {
         "你好": "boy",
         "请访问地址": "/docs"
@@ -66,4 +78,4 @@ async def update_cookies(cookies: dict):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='app:app', host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app='app:app', host="0.0.0.0", port=5000, reload=True)

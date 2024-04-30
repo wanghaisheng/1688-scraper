@@ -17,7 +17,7 @@ def sign(data, m_h5_tk):
     timestamp = str(int(time.time() * 1000))  # 时间戳
 
     p = (m_h5_tk + "&" + timestamp + "&" + app_key + "&" + data)
-    path = os.path.dirname(__file__) + '\\lib\\sign.js'
+    path = os.path.dirname(__file__) + '/lib/sign.js'
     with open(path, 'r', encoding='utf-8') as f:  # 加载js
         ctx = execjs.compile(f.read())
     return timestamp, ctx.call('u', p)

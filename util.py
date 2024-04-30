@@ -17,8 +17,8 @@ from aiohttp_retry import RetryClient, ExponentialRetry
 from config import log_save_path, log_level
 import aiohttp
 
-warnings.simplefilter('ignore', category=ResourceWarning)
-# warnings.filterwarnings('ignore')
+# warnings.simplefilter('ignore', category=ResourceWarning)  # 尝试消除Unclosed client session的警告
+
 
 class MyLogger:
     def __init__(self, log_file_path=log_save_path):
@@ -73,26 +73,21 @@ def save_in_excel(data, filename):
 class AsyHttp:
     def __init__(self):
         # 默认情况下，aiohttp使用HTTP keep-alive，因此同一个TCP连接可以用于多个请求。 这可以提高性能，因为不必为每个请求都建立一个新的TCP连接。
-        connector = aiohttp.TCPConnector(force_close=True)
-        self.client = ClientSession(connector=connector, timeout=ClientTimeout(total=10, connect=3))
+        connector = aiohttp.TCPConnector(force_close=True, verify_ssl=False)
+        self.client = ClientSession(connector=connector, timeout=ClientTimeout(total=10, connect=3), trust_env=True)
         # 重试3次
         self.retry_client = RetryClient(self.client, retry_options=ExponentialRetry(attempts=3))
 
     def request(self, method, url, **kwargs):
         logger.debug(f"正在发起请求 => {method}:{url}")
         try:
-            # await self.semaphore.acquire()
-            # async with self.semaphore:
             # 代理: https://docs.aiohttp.org/en/stable/client_advanced.html#proxy-support
-            proxy = 'http://your_proxy_url:your_proxy_port'
-            proxy_auth = aiohttp.BasicAuth('your_user', 'your_password')
+            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # 加上这一行
+            # proxy = 'http://your_proxy_url:your_proxy_port'
+            # proxy_auth = aiohttp.BasicAuth('your_user', 'your_password')
             return self.retry_client.request(method, url, **kwargs)
         except aiohttp.ClientError as e:
             logger.error(f"请求失败 => {e}")
-        finally:
-            # await self.semaphore.acquire()
-            # await self.retry_client.close()
-            pass
 
     def get(self, url, **kwargs):
         return self.request('GET', url, **kwargs)
