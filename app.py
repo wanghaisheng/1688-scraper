@@ -64,4 +64,5 @@ async def shop(shop_url: str = 'https://shop2260590x869h3.1688.com/page/offerlis
 
 
 if __name__ == '__main__':
+    # 命令运行 uvicorn app:app --host 0.0.0.0 --port 5000 --reload
     uvicorn.run(app='app:app', host="0.0.0.0", port=5000, reload=True)

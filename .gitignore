@@ -1,6 +1,5 @@
 /logs/**
 /output/**
 /.idea/**
-/.venv/**
 /__pycache__/**
 /test/**
